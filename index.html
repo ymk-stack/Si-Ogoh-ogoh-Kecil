@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Si Ogoh-Ogoh Kecil</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #000000;  /* Background hitam */
+    overflow: hidden;
+}
+        
+        #unity-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        #unity-canvas {
+            background: #000;
+            display: none;
+        }
+        
+        /* SPLASH SCREEN */
+        #splash-screen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #000000;  /* Background hitam solid */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#splash-logo {
+    width: 500px;  /* Sesuaikan ukuran logo */
+    height: auto;
+    margin-bottom: 50px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+        
+        /* LOADING BAR */
+        #loading-container {
+            width: 400px;
+            text-align: center;
+            color: white;
+        }
+        
+        #loading-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        #progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        #progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        #progress-text {
+            font-size: 14px;
+            opacity: 0.9;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        #loading-tips {
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.8;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            #splash-logo { width: 200px; margin-bottom: 30px; }
+            #loading-container { width: 300px; }
+            #loading-text { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="unity-container">
+        <!-- SPLASH SCREEN -->
+        <div id="splash-screen">
+            <img id="splash-logo" src="TemplateData/splash-assets/game-logo.png" alt="Game Logo">
+            
+            <div id="loading-container">
+                <div id="loading-text">Loading Game...</div>
+                
+                <div id="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+                
+                <div id="progress-text">0% Complete</div>
+                
+                <div id="loading-tips">
+                    <p>🎮 Tip: Use arrow keys or touch controls to move!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- UNITY CANVAS -->
+        <canvas id="unity-canvas"></canvas>
+    </div>
+
+    <script>
+        // Loading messages
+        const loadingMessages = [
+            "Initializing game engine...",
+            "Loading game assets...",
+            "Preparing graphics...",
+            "Setting up audio...",
+            "Connecting game logic...",
+            "Almost ready to play!"
+        ];
+        
+        let messageIndex = 0;
+        
+        // Elements
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const loadingText = document.getElementById('loading-text');
+        const splashScreen = document.getElementById('splash-screen');
+        const canvas = document.getElementById('unity-canvas');
+        
+        // Update loading progress
+        function updateProgress(progress) {
+            const percentage = Math.round(progress * 100);
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = percentage + '% Complete';
+            
+            // Update loading message based on progress
+            const newMessageIndex = Math.floor(progress * loadingMessages.length);
+            if (newMessageIndex !== messageIndex && newMessageIndex < loadingMessages.length) {
+                messageIndex = newMessageIndex;
+                loadingText.textContent = loadingMessages[messageIndex];
+            }
+        }
+        
+        // Unity WebGL loader
+        var buildUrl = "Build";
+        var loaderUrl = buildUrl + "/Si Ogoh-ogoh Kecil.loader.js";
+        var config = {
+            dataUrl: buildUrl + "/Si Ogoh-ogoh Kecil.data",
+            frameworkUrl: buildUrl + "/Si Ogoh-ogoh Kecil.framework.js",
+            codeUrl: buildUrl + "/Si Ogoh-ogoh Kecil.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "Rachel Angeline",
+            productName: "Si Ogoh-Ogoh Kecil",
+            productVersion: "1.0",
+        };
+
+        // Load Unity
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, updateProgress).then((unityInstance) => {
+                // Game loaded successfully
+                loadingText.textContent = "Game Ready!";
+                updateProgress(1);
+                
+                setTimeout(() => {
+                    // Hide splash screen
+                    splashScreen.style.opacity = '0';
+                    splashScreen.style.transition = 'opacity 1s ease';
+                    
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                        canvas.style.display = 'block';
+                        
+                        // Auto-resize canvas
+                        function resizeCanvas() {
+                            const container = canvas.parentElement;
+                            const w = container.clientWidth;
+                            const h = container.clientHeight;
+                            const aspectRatio = 1920 / 1080;
+                            
+                            if (w / h > aspectRatio) {
+                                canvas.style.width = (h * aspectRatio) + 'px';
+                                canvas.style.height = h + 'px';
+                            } else {
+                                canvas.style.width = w + 'px';
+                                canvas.style.height = (w / aspectRatio) + 'px';
+                            }
+                        }
+                        
+                        resizeCanvas();
+                        window.addEventListener('resize', resizeCanvas);
+                    }, 1000);
+                }, 500);
+                
+            }).catch((message) => {
+                loadingText.textContent = "Failed to load game";
+                progressText.textContent = "Error: " + message;
+                console.error("Unity load error:", message);
+            });
+        };
+        
+        script.onerror = () => {
+            loadingText.textContent = "Failed to load game engine";
+            progressText.textContent = "Please refresh the page";
+        };
+        
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
